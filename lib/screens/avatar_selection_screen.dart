@@ -452,6 +452,25 @@ class _AvatarSelectionScreenState extends State<AvatarSelectionScreen> {
                 ),
               ),
               const SizedBox(height: 8),
+              // Affinity XP hint
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.bolt_rounded,
+                      size: 11,
+                      color: statColor.withValues(alpha: 0.7)),
+                  const SizedBox(width: 4),
+                  Text(
+                    '+25% XP on ${avatar.defaultStat.toUpperCase()} quests',
+                    style: AppTheme.monoFont(
+                      size: 9,
+                      color: statColor.withValues(alpha: 0.7),
+                      letterSpacing: 0.8,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
             ],
           ),
         );

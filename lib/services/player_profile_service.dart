@@ -9,17 +9,27 @@ class PlayerProfileService {
   static const _scheduleKey = 'player_profile.schedule';
   static const _goalKey = 'player_profile.goal';
 
-  final _db = Supabase.instance.client;
-  String? get _uid => _db.auth.currentUser?.id;
+  SupabaseClient? get _db {
+    try {
+      return Supabase.instance.client;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  String? get _uid => _db?.auth.currentUser?.id;
 
   Future<PlayerProfile?> load() async {
-    if (_uid != null) {
+    final client = _db;
+    final uid = _uid;
+    if (client != null && uid != null) {
       try {
-        final row = await _db
+        final row = await client
             .from('player_profiles')
             .select()
-            .eq('user_id', _uid!)
-            .maybeSingle();
+            .eq('user_id', uid)
+            .maybeSingle()
+            .timeout(const Duration(seconds: 4));
 
         if (row != null) {
           final profile = PlayerProfile(
@@ -49,11 +59,13 @@ class PlayerProfileService {
     await prefs.setString(_professionKey, profession);
     await prefs.setString(_scheduleKey, schedule);
 
-    if (_uid == null) return;
+    final client = _db;
+    final uid = _uid;
+    if (client == null || uid == null) return;
     try {
-      await _db.from('player_profiles').upsert(
+      await client.from('player_profiles').upsert(
         {
-          'user_id': _uid,
+          'user_id': uid,
           'player_name': playerName,
           'profession': profession,
           'schedule': schedule,
@@ -70,23 +82,25 @@ class PlayerProfileService {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_goalKey, goal);
 
-    if (_uid == null) return;
+    final client = _db;
+    final uid = _uid;
+    if (client == null || uid == null) return;
     try {
-      final updated = await _db
+      final updated = await client
           .from('player_profiles')
           .update({
             'goal': goal,
             'updated_at': DateTime.now().toIso8601String(),
           })
-          .eq('user_id', _uid!)
+          .eq('user_id', uid)
           .select()
           .maybeSingle();
 
       if (updated == null) {
         final local = await _readLocal();
-        await _db.from('player_profiles').upsert(
+        await client.from('player_profiles').upsert(
           {
-            'user_id': _uid,
+            'user_id': uid,
             'player_name': local?.playerName ?? '',
             'profession': local?.profession ?? '',
             'schedule': local?.schedule ?? '',
@@ -115,11 +129,13 @@ class PlayerProfileService {
     );
     await _writeLocal(profile);
 
-    if (_uid == null) return;
+    final client = _db;
+    final uid = _uid;
+    if (client == null || uid == null) return;
     try {
-      await _db.from('player_profiles').upsert(
+      await client.from('player_profiles').upsert(
         {
-          'user_id': _uid,
+          'user_id': uid,
           'player_name': playerName,
           'profession': profession,
           'schedule': schedule,

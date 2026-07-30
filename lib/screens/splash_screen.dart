@@ -116,11 +116,18 @@ class _SplashScreenState extends State<SplashScreen>
   }
 
   Future<Widget> _resolveDestination() async {
-    final user = Supabase.instance.client.auth.currentUser;
+    User? user;
+    try {
+      user = Supabase.instance.client.auth.currentUser;
+    } catch (e) {
+      debugPrint('Splash: Supabase auth check failed: $e');
+    }
 
     if (user == null) return const AuthChoiceScreen();
 
-    final profile = await PlayerProfileService().load();
+    final profile = await PlayerProfileService()
+        .load()
+        .timeout(const Duration(seconds: 4), onTimeout: () => null);
 
     if (profile != null && profile.isComplete) {
       return DashboardScreen(

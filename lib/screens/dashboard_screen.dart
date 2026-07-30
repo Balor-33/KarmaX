@@ -11,6 +11,7 @@ import '../models/avatar.dart';
 import '../models/avatar_composition.dart';
 import '../models/user_avatar_progress.dart';
 import '../services/avatar_service.dart';
+import '../utils/avatar_affinity.dart';
 import 'profile_screen.dart';
 import 'student_problem_screen.dart';
 import '../widgets/hci_condition_toggle.dart';
@@ -61,6 +62,7 @@ class _DashboardScreenState extends State<DashboardScreen>
     'knowledge': 0,
     'discipline': 0,
     'social': 0,
+    'focus': 0,
   };
   static const _statsPrefsKey = 'player_growth_stats';
 
@@ -214,8 +216,12 @@ class _DashboardScreenState extends State<DashboardScreen>
   void _onQuestComplete(Map<String, dynamic> quest, {required bool isWeekly}) {
     if (quest['completed'] == true) return; // already done, ignore double-taps
 
-    final xp = int.tryParse(quest['xp'] as String? ?? '0') ?? 0;
+    final baseXp = int.tryParse(quest['xp'] as String? ?? '0') ?? 0;
     final category = quest['category'] as String? ?? '';
+    final avatarStat = _currentAvatar?.defaultStat;
+    final hasAffinity = AvatarAffinity.isAffinity(avatarStat, category);
+    final xp = AvatarAffinity.computeXp(baseXp, avatarStat, category);
+    final bonusXp = AvatarAffinity.bonusAmount(baseXp);
     var leveledUp = false;
 
     setState(() {
@@ -241,6 +247,66 @@ class _DashboardScreenState extends State<DashboardScreen>
         leveledUp = false;
       }
     });
+
+    // Show affinity bonus snackbar
+    if (hasAffinity && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          duration: const Duration(seconds: 3),
+          content: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            decoration: BoxDecoration(
+              color: AppTheme.bg700,
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(
+                color: _categoryColor(category).withValues(alpha: 0.5),
+                width: 1,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: _categoryColor(category).withValues(alpha: 0.2),
+                  blurRadius: 20,
+                ),
+              ],
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.bolt_rounded,
+                    color: _categoryColor(category), size: 18),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: RichText(
+                    text: TextSpan(
+                      children: [
+                        TextSpan(
+                          text: 'AFFINITY BONUS  ',
+                          style: AppTheme.monoFont(
+                            size: 10,
+                            color: _categoryColor(category),
+                            letterSpacing: 1.5,
+                          ),
+                        ),
+                        TextSpan(
+                          text: '+$bonusXp XP earned',
+                          style: AppTheme.uiFont(
+                            size: 12,
+                            weight: FontWeight.w700,
+                            color: AppTheme.text100,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
 
     final questId = quest['id'];
     if (questId != null) {
@@ -455,6 +521,12 @@ class _DashboardScreenState extends State<DashboardScreen>
                           statName: 'Social',
                           emoji: '🧍',
                           value: (_stats['social'] ?? 0).toDouble(),
+                          delay: Duration.zero,
+                        ),
+                        StatBar(
+                          statName: 'Focus',
+                          emoji: '🎯',
+                          value: (_stats['focus'] ?? 0).toDouble(),
                           delay: Duration.zero,
                         ),
                       ],
@@ -847,6 +919,7 @@ class _DashboardScreenState extends State<DashboardScreen>
               completed: e.value['completed'] as bool,
               index: e.key,
               description: e.value['why'] as String?,
+              avatarAffinityStat: _currentAvatar?.defaultStat,
               onComplete: () => _onQuestComplete(e.value, isWeekly: false),
             );
           }),
@@ -872,6 +945,7 @@ class _DashboardScreenState extends State<DashboardScreen>
               completed: e.value['completed'] as bool,
               index: e.key,
               description: e.value['why'] as String?,
+              avatarAffinityStat: _currentAvatar?.defaultStat,
               onComplete: () => _onQuestComplete(e.value, isWeekly: true),
             );
           }),
@@ -995,6 +1069,12 @@ class _DashboardScreenState extends State<DashboardScreen>
                 value: (_stats['social'] ?? 0).toDouble(),
                 delay: const Duration(milliseconds: 400),
               ),
+              StatBar(
+                statName: 'Focus',
+                emoji: '🎯',
+                value: (_stats['focus'] ?? 0).toDouble(),
+                delay: const Duration(milliseconds: 500),
+              ),
             ],
           ),
         ),
@@ -1035,6 +1115,26 @@ class _DashboardScreenState extends State<DashboardScreen>
         ),
       ],
     );
+  }
+
+  /// Maps a quest category string to its theme colour.
+  /// Kept in sync with the same helper in QuestCard so the affinity
+  /// SnackBar uses the correct category colour.
+  Color _categoryColor(String category) {
+    switch (category.toLowerCase()) {
+      case 'health':
+        return AppTheme.danger;
+      case 'knowledge':
+        return AppTheme.xpBlue;
+      case 'discipline':
+        return AppTheme.copper;
+      case 'social':
+        return AppTheme.mana;
+      case 'focus':
+        return const Color(0xFF9B6DFF); // violet/purple
+      default:
+        return AppTheme.text200;
+    }
   }
 
   Widget _buildBottomNav() {
