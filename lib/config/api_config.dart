@@ -16,17 +16,22 @@ class ApiConfig {
   /// ⚠️  Update this to your real Render deployment URL before release.
   ///     Example: "https://karmax-backend.onrender.com"
   static const String backendBaseUrl =
-      'https://karmax-backend.onrender.com'; // ← replace with your Render URL
+      'https://karmax-vznp.onrender.com'; // ← replace with your Render URL
 
   /// Supabase project URL.
-  static const String supabaseUrl =
-      String.fromEnvironment('SUPABASE_URL', defaultValue: 'https://ufpebjplmbgtlgrfzauw.supabase.co');
+  static const String supabaseUrl = String.fromEnvironment(
+    'SUPABASE_URL',
+    defaultValue: 'https://ufpebjplmbgtlgrfzauw.supabase.co',
+  );
 
   /// Supabase anonymous / publishable key.
   /// This key is intentionally public (row-level security enforces access).
   /// NEVER put the SERVICE ROLE key here.
-  static const String supabaseAnonKey =
-      String.fromEnvironment('SUPABASE_ANON_KEY', defaultValue: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVmcGVianBsbWJndGxncmZ6YXV3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIwMzkyNTcsImV4cCI6MjA5NzYxNTI1N30.V-wyFNA08Y0vu_Y2Nal5lGUmNPQvOHK1QXmWBSDPWDA');
+  static const String supabaseAnonKey = String.fromEnvironment(
+    'SUPABASE_ANON_KEY',
+    defaultValue:
+        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVmcGVianBsbWJndGxncmZ6YXV3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIwMzkyNTcsImV4cCI6MjA5NzYxNTI1N30.V-wyFNA08Y0vu_Y2Nal5lGUmNPQvOHK1QXmWBSDPWDA',
+  );
 
   static bool get isBackendConfigured => backendBaseUrl.isNotEmpty;
   static bool get isSupabaseConfigured =>
