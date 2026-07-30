@@ -1,0 +1,44 @@
+name: karmax
+description: KarmaX - AI-powered life simulation RPG engine.
+
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  google_fonts: ^8.2.0
+  animate_do: ^5.1.0
+  percent_indicator: ^4.2.3
+  flutter_animate: ^4.5.0
+  shimmer: ^3.0.0
+  lottie: ^3.1.0
+  provider: ^6.1.2
+  shared_preferences: ^2.2.3
+  uuid: ^4.3.3
+  supabase_flutter: ^2.12.4
+  http: ^1.2.0
+  model_viewer_plus: ^1.7.0
+  string_similarity: ^2.0.0
+  # flutter_dotenv REMOVED – credentials are injected at build time via
+  # --dart-define flags (compile-time constants), not loaded from .env files
+  # at runtime. This prevents API keys from being bundled as plaintext assets.
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true
+  assets:
+    # NOTE: assets/.env is NOT listed here.
+    # .env files must never be bundled as Flutter assets – they would be
+    # extractable from the APK/IPA by anyone with the binary.
+    # Supabase credentials → --dart-define at build time
+    # Gemini API key      → Render environment variable (backend only)
+    - assets/models/
