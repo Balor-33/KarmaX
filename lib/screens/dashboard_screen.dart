@@ -40,9 +40,9 @@ class DashboardScreen extends StatefulWidget {
 
 class _DashboardScreenState extends State<DashboardScreen>
     with SingleTickerProviderStateMixin {
-  int _currentXP = 340;
+  int _currentXP = 0;
   final int _maxXP = 500;
-  int _level = 7;
+  int _level = 1;
   int _completedQuests = 0;
   bool _showLevelUp = false;
   int _selectedTab = 0;
@@ -188,6 +188,7 @@ class _DashboardScreenState extends State<DashboardScreen>
           setState(() {
             _avatarProgress = progress;
             _currentAvatar = avatar;
+            _level = progress.currentLevel;
             _avatarLoading = false;
           });
 
@@ -544,6 +545,7 @@ class _DashboardScreenState extends State<DashboardScreen>
                             playerName: widget.playerName,
                             level: _level,
                             completedQuests: _completedQuests,
+                            stats: _stats,
                           ),
                         ),
                       );
@@ -1084,12 +1086,19 @@ class _DashboardScreenState extends State<DashboardScreen>
           subtitle: 'Numbers that make the streak feel real.',
         ),
         const SizedBox(height: 12),
-        ...[
-          {'label': 'Quests Completed', 'value': '$_completedQuests'},
-          {'label': 'Current Level', 'value': 'LVL $_level'},
-          {'label': 'Total XP', 'value': '${(_level - 1) * 500 + _currentXP}'},
-          {'label': 'Streak', 'value': '4 DAYS'},
-        ].map(
+        ...() {
+          final streakDays =
+              _completedQuests == 0 ? 0 : (_completedQuests / 2).ceil() + 1;
+          return [
+            {'label': 'Quests Completed', 'value': '$_completedQuests'},
+            {'label': 'Current Level', 'value': 'LVL $_level'},
+            {'label': 'Total XP', 'value': '${(_level - 1) * 500 + _currentXP}'},
+            {
+              'label': 'Streak',
+              'value': '$streakDays ${streakDays == 1 ? 'DAY' : 'DAYS'}'
+            },
+          ];
+        }().map(
           (item) => Container(
             margin: const EdgeInsets.only(bottom: 10),
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),

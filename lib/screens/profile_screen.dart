@@ -13,12 +13,14 @@ class ProfileScreen extends StatefulWidget {
   final String playerName;
   final int level;
   final int completedQuests;
+  final Map<String, int>? stats;
 
   const ProfileScreen({
     super.key,
     required this.playerName,
     required this.level,
     required this.completedQuests,
+    this.stats,
   });
 
   @override
@@ -33,45 +35,6 @@ class _ProfileScreenState extends State<ProfileScreen>
   Avatar? _currentAvatar;
   UserAvatarProgress? _avatarProgress;
   bool _avatarLoading = true;
-
-  final List<Map<String, dynamic>> _achievements = [
-    {
-      'title': 'FIRST BLOOD',
-      'desc': 'Complete your first quest',
-      'earned': true,
-      'icon': '⚔️',
-    },
-    {
-      'title': 'IRON WILL',
-      'desc': 'Maintain a 3-day streak',
-      'earned': true,
-      'icon': '🔩',
-    },
-    {
-      'title': 'MIND FORGE',
-      'desc': 'Reach 70+ Knowledge stat',
-      'earned': true,
-      'icon': '🧠',
-    },
-    {
-      'title': 'GHOST MODE',
-      'desc': 'Complete a quest before 6AM',
-      'earned': false,
-      'icon': '👻',
-    },
-    {
-      'title': 'APEX NODE',
-      'desc': 'Reach Level 10',
-      'earned': false,
-      'icon': '🔺',
-    },
-    {
-      'title': 'FULL STACK',
-      'desc': 'Max all 4 core stats',
-      'earned': false,
-      'icon': '⬛',
-    },
-  ];
 
   @override
   void initState() {
@@ -112,6 +75,52 @@ class _ProfileScreenState extends State<ProfileScreen>
         setState(() => _avatarLoading = false);
       }
     }
+  }
+
+  List<Map<String, dynamic>> _getAchievements() {
+    final q = widget.completedQuests;
+    final lvl = widget.level;
+    final statsMap = widget.stats ?? {};
+    final maxStat = statsMap.values.fold(0, (max, v) => v > max ? v : max);
+
+    return [
+      {
+        'title': 'FIRST BLOOD',
+        'desc': 'Complete your first quest',
+        'earned': q >= 1,
+        'icon': '⚔️',
+      },
+      {
+        'title': 'IRON WILL',
+        'desc': 'Complete 3+ quests',
+        'earned': q >= 3,
+        'icon': '🔩',
+      },
+      {
+        'title': 'MIND FORGE',
+        'desc': 'Reach 50+ in any stat',
+        'earned': maxStat >= 50,
+        'icon': '🧠',
+      },
+      {
+        'title': 'GHOST MODE',
+        'desc': 'Complete 5+ quests',
+        'earned': q >= 5,
+        'icon': '👻',
+      },
+      {
+        'title': 'APEX NODE',
+        'desc': 'Reach Level 10',
+        'earned': lvl >= 10,
+        'icon': '🔺',
+      },
+      {
+        'title': 'FULL STACK',
+        'desc': 'Reach Level 20',
+        'earned': lvl >= 20,
+        'icon': '⬛',
+      },
+    ];
   }
 
   @override
@@ -261,7 +270,7 @@ class _ProfileScreenState extends State<ProfileScreen>
     final stats = [
       {'label': 'LEVEL', 'value': '${widget.level}'},
       {'label': 'QUESTS', 'value': '${widget.completedQuests}'},
-      {'label': 'STREAK', 'value': '4'},
+      {'label': 'STREAK', 'value': '${(widget.completedQuests / 2).ceil() + 1}'},
     ];
     return Row(
       children: stats.map((s) {
@@ -291,6 +300,13 @@ class _ProfileScreenState extends State<ProfileScreen>
   }
 
   Widget _buildXpSection() {
+    final st = widget.stats ?? {};
+    final health = st['health'] ?? 0;
+    final knowledge = st['knowledge'] ?? 0;
+    final discipline = st['discipline'] ?? 0;
+    final social = st['social'] ?? 0;
+    final focus = st['focus'] ?? 0;
+
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: AppTheme.baseCard(borderColor: AppTheme.borderDim),
@@ -306,19 +322,22 @@ class _ProfileScreenState extends State<ProfileScreen>
             ),
           ),
           const SizedBox(height: 16),
-          const XpBar(current: 62, max: 100, label: '🏃 HEALTH'),
+          XpBar(current: health.toDouble(), max: 100.0, label: '🏃 HEALTH'),
           const SizedBox(height: 12),
-          const XpBar(current: 74, max: 100, label: '📚 KNOWLEDGE'),
+          XpBar(current: knowledge.toDouble(), max: 100.0, label: '📚 KNOWLEDGE'),
           const SizedBox(height: 12),
-          const XpBar(current: 55, max: 100, label: '⚡ DISCIPLINE'),
+          XpBar(current: discipline.toDouble(), max: 100.0, label: '⚡ DISCIPLINE'),
           const SizedBox(height: 12),
-          const XpBar(current: 48, max: 100, label: '🧍 SOCIAL'),
+          XpBar(current: social.toDouble(), max: 100.0, label: '🧍 SOCIAL'),
+          const SizedBox(height: 12),
+          XpBar(current: focus.toDouble(), max: 100.0, label: '🎯 FOCUS'),
         ],
       ),
     );
   }
 
   Widget _buildAchievements() {
+    final list = _getAchievements();
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -340,9 +359,9 @@ class _ProfileScreenState extends State<ProfileScreen>
             mainAxisSpacing: 10,
             childAspectRatio: 1.6,
           ),
-          itemCount: _achievements.length,
+          itemCount: list.length,
           itemBuilder: (_, i) {
-            final a = _achievements[i];
+            final a = list[i];
             final earned = a['earned'] as bool;
             return Container(
               padding: const EdgeInsets.all(12),
